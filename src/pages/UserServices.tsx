@@ -39,7 +39,6 @@ export default function UserServices() {
       <div className="services-grid">
         {services.map((s) => {
           const req = getStatus(s.id);
-          const hasSeats = s.participants < s.seats;
           return (
             <div className="panel service-card" key={s.id}>
               <div className="service-card-header">
@@ -58,10 +57,7 @@ export default function UserServices() {
                 </div>
                 <div className="service-detail">
                   <span>Vagas</span>
-                  <strong>
-                    {s.participants}/{s.seats}
-                    {!hasSeats && <small className="muted"> (lotado)</small>}
-                  </strong>
+                  <strong>{s.participants}/{s.seats}</strong>
                 </div>
                 <div className="service-detail">
                   <span>Renovação</span>
@@ -80,9 +76,8 @@ export default function UserServices() {
                   <button
                     className="primary-btn"
                     onClick={() => handleRequest(s.id, s.name)}
-                    disabled={!hasSeats}
                   >
-                    <Send size={14} /> {hasSeats ? "Solicitar participação" : "Sem vagas"}
+                    <Send size={14} /> Solicitar participação
                   </button>
                 )}
               </div>
