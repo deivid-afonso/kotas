@@ -1,0 +1,14 @@
+{
+  "name": "Assina — Gestão de assinaturas",
+  "short_name": "Assina",
+  "description": "Sistema de gestão de assinaturas anuais compartilhadas",
+  "start_url": "/kotas/",
+  "scope": "/kotas/",
+  "display": "standalone",
+  "background_color": "#0d111a",
+  "theme_color": "#111827",
+  "icons": [
+    { "src": "/kotas/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" },
+    { "src": "/kotas/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ]
+}

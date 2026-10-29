@@ -4,9 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#111827" />
+    <meta name="description" content="Sistema de gestão de assinaturas anuais compartilhadas com cobranças PIX consolidadas." />
+    <meta name="author" content="Deivid Afonso" />
+    <meta property="og:title" content="Assina — Gestão de assinaturas" />
+    <meta property="og:description" content="Administre assinaturas anuais, participantes e pagamentos PIX em um painel único." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://deivid-afonso.github.io/kotas/" />
+    <link rel="manifest" href="/kotas/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/kotas/icon-192.svg" />
+    <link rel="apple-touch-icon" href="/kotas/icon-192.svg" />
     <title>Assina — Gestão de assinaturas</title>
+    <script>
+      // GitHub Pages SPA: restore path after 404 redirect
+      (function() {
+        var r = sessionStorage.getItem('redirect');
+        if (r) { sessionStorage.removeItem('redirect'); history.replaceState(null, '', r); }
+      })();
+    </script>
   </head>
   <body>
+    <noscript>Você precisa habilitar JavaScript para usar o Assina.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
