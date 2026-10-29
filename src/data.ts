@@ -15,18 +15,6 @@ export const services: Service[] = [
   { id: 12, name: "Duolingo", plan: "Família", annualValue: 300, chargeValue: 50, contractedAt: "2025-10-01", renewsAt: "2026-10-01", seats: 6, participants: 2, color: "#58cc02", notes: "Plano família · Até 6 perfis para aprender idiomas" },
 ];
 
-export const participants: Participant[] = [
-  { id: 1, name: "Mariana Costa", email: "mariana@email.com", phone: "(11) 99821-4420", services: [1, 2, 3], status: "Ativo", total: 529.8 },
-  { id: 2, name: "Rafael Nunes", email: "rafael@email.com", phone: "(21) 99128-3301", services: [1, 2], status: "Ativo", total: 359.4 },
-  { id: 3, name: "João Pedro Alves", email: "joao@email.com", phone: "(31) 98872-1120", services: [1, 4], status: "Pendente", total: 399.2 },
-  { id: 4, name: "Camila Rocha", email: "camila@email.com", phone: "(11) 99711-0832", services: [2, 3, 4], status: "Ativo", total: 449.8 },
-  { id: 5, name: "Lucas Martins", email: "lucas@email.com", phone: "(41) 99910-2290", services: [3], status: "Ativo", total: 170.4 },
-];
+export const participants: Participant[] = [];
 
-export const charges: AnnualCharge[] = [
-  { id: 1, participant: "Mariana Costa", participantId: 1, dueDate: "2025-02-10", reference: "2025", services: [{ name: "Netflix", value: 239.6, adjustment: 0 }, { name: "Spotify", value: 119.8, adjustment: 0 }, { name: "Disney+", value: 170.4, adjustment: -20 }], status: "pago", proof: true },
-  { id: 2, participant: "Rafael Nunes", participantId: 2, dueDate: "2025-02-10", reference: "2025", services: [{ name: "Netflix", value: 239.6, adjustment: 0 }, { name: "Spotify", value: 119.8, adjustment: 0 }], status: "pendente", proof: false },
-  { id: 3, participant: "João Pedro Alves", participantId: 3, dueDate: "2025-01-28", reference: "2025", services: [{ name: "Netflix", value: 239.6, adjustment: 0 }, { name: "Max", value: 159.6, adjustment: 0 }], status: "vencido", proof: false },
-  { id: 4, participant: "Camila Rocha", participantId: 4, dueDate: "2025-04-01", reference: "2025", services: [{ name: "Spotify", value: 119.8, adjustment: 0 }, { name: "Disney+", value: 170.4, adjustment: 0 }, { name: "Max", value: 159.6, adjustment: 0 }], status: "pago", proof: true },
-  { id: 5, participant: "Lucas Martins", participantId: 5, dueDate: "2025-01-25", reference: "2025", services: [{ name: "Disney+", value: 170.4, adjustment: 0 }], status: "pendente", proof: false },
-];
+export const charges: AnnualCharge[] = [];

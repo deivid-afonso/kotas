@@ -87,25 +87,6 @@ export default function Login({ onGoRegister }: { onGoRegister: () => void }) {
           Criar uma conta
         </button>
 
-        <div className="login-demo">
-          <p>Contas demonstrativas</p>
-          <div className="demo-accounts">
-            <button
-              type="button"
-              onClick={() => { setEmail("deividsa@gmail.com"); setPassword("Pedro123@@11"); setError(null); }}
-            >
-              <strong>Admin</strong>
-              <small>deividsa@gmail.com</small>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEmail("mariana@email.com"); setPassword("mariana123"); setError(null); }}
-            >
-              <strong>Participante</strong>
-              <small>mariana@email.com</small>
-            </button>
-          </div>
-        </div>
       </div>
 
       <p className="login-footer">© 2025 Assina · Gestão de assinaturas compartilhadas</p>

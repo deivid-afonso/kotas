@@ -22,11 +22,6 @@ interface AuthState {
 
 const builtInAccounts: AccountRecord[] = [
   { id: 0, name: "Deivid Afonso", email: "deividsa@gmail.com", role: "admin", password: "Pedro123@@11" },
-  { id: 1, name: "Mariana Costa", email: "mariana@email.com", role: "user", participantId: 1, password: "mariana123" },
-  { id: 2, name: "Rafael Nunes", email: "rafael@email.com", role: "user", participantId: 2, password: "rafael123" },
-  { id: 3, name: "João Pedro Alves", email: "joao@email.com", role: "user", participantId: 3, password: "joao123" },
-  { id: 4, name: "Camila Rocha", email: "camila@email.com", role: "user", participantId: 4, password: "camila123" },
-  { id: 5, name: "Lucas Martins", email: "lucas@email.com", role: "user", participantId: 5, password: "lucas123" },
 ];
 
 const REGISTERED_KEY = "assina-registered";

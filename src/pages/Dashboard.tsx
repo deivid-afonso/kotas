@@ -44,9 +44,9 @@ export default function Dashboard() {
 
       <section className="metric-grid" aria-label="Indicadores financeiros">
         <Metric label="Total anual previsto" value={brl(total)} detail="+12,5% vs. ano anterior" tone="blue" icon={CircleDollarSign} />
-        <Metric label="Total recebido" value={brl(paid)} detail={`${Math.round((paid / total) * 100)}% do previsto`} tone="green" icon={Check} />
-        <Metric label="Total pendente" value={brl(total - paid)} detail="2 cobranças aguardando" tone="yellow" icon={WalletCards} />
-        <Metric label="Em atraso" value={brl(399.2)} detail="2 cobranças vencidas" tone="red" icon={AlertCircle} />
+        <Metric label="Total recebido" value={brl(paid)} detail={total > 0 ? `${Math.round((paid / total) * 100)}% do previsto` : "Sem cobranças"} tone="green" icon={Check} />
+        <Metric label="Total pendente" value={brl(total - paid)} detail={total - paid > 0 ? "Cobranças aguardando" : "Nenhuma pendência"} tone="yellow" icon={WalletCards} />
+        <Metric label="Em atraso" value={brl(0)} detail="Nenhuma cobrança vencida" tone="red" icon={AlertCircle} />
       </section>
 
       <div className="content-grid">

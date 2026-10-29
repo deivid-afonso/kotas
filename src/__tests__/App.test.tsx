@@ -61,11 +61,14 @@ describe("App - Login", () => {
     await waitFor(() => expect(screen.queryByText(/Bom dia, Deivid/)).toBeInTheDocument(), { timeout: 3000 });
   });
 
-  it("logs in as participant", async () => {
+  it("registers and logs in as new user", async () => {
     renderApp();
-    await userEvent.type(await screen.findByPlaceholderText("seu@email.com"), "mariana@email.com");
-    await userEvent.type(screen.getByPlaceholderText("••••••••"), "mariana123");
-    await userEvent.click(screen.getByRole("button", { name: "Entrar" }));
-    await waitFor(() => expect(screen.queryByText(/Olá, Mariana/)).toBeInTheDocument(), { timeout: 3000 });
+    await userEvent.click(await screen.findByRole("button", { name: "Criar uma conta" }));
+    await userEvent.type(await screen.findByPlaceholderText("Seu nome"), "Lais Teste");
+    await userEvent.type(screen.getByPlaceholderText("seu@email.com"), "lais@email.com");
+    await userEvent.type(screen.getByPlaceholderText("Mínimo 6 caracteres"), "lais123456");
+    await userEvent.type(screen.getByPlaceholderText("Repita a senha"), "lais123456");
+    await userEvent.click(screen.getByRole("button", { name: /Criar conta/ }));
+    await waitFor(() => expect(screen.queryByText(/Olá, Lais/)).toBeInTheDocument(), { timeout: 3000 });
   });
 });
