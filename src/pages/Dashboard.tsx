@@ -6,7 +6,6 @@ import {
   ChevronDown,
   CircleDollarSign,
   Plus,
-  Users,
   WalletCards,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +13,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { charges, services } from "../data";
 import { brl, formatDate } from "../utils";
 import { Metric } from "../components/Metric";
+import { getRequests } from "../stores/serviceRequests";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -26,6 +26,11 @@ export default function Dashboard() {
   const paid = charges
     .filter((c) => c.status === "pago")
     .reduce((sum, c) => sum + c.services.reduce((s, item) => s + item.value + item.adjustment, 0), 0);
+
+  const pendingRequests = getRequests().filter((r) => r.status === "solicitado").length;
+  const sorted = [...services].sort((a, b) => new Date(a.renewsAt).getTime() - new Date(b.renewsAt).getTime());
+  const nextRenewal = sorted.find((s) => new Date(s.renewsAt).getTime() > Date.now());
+  const nextRenewalDays = nextRenewal ? Math.ceil((new Date(nextRenewal.renewsAt).getTime() - Date.now()) / 86400000) : 0;
 
   return (
     <>
@@ -85,19 +90,22 @@ export default function Dashboard() {
             </div>
             <button className="link-btn" onClick={() => navigate("/services")}>Ver todas</button>
           </div>
-          {services.slice(0, 3).map((s) => (
-            <div className="renewal" key={s.id}>
-              <div className="service-logo" style={{ background: s.color }}>{s.name[0]}</div>
-              <div>
-                <strong>{s.name}</strong>
-                <small>{s.plan}</small>
+          {services.slice(0, 3).map((s) => {
+            const days = Math.max(0, Math.ceil((new Date(s.renewsAt).getTime() - Date.now()) / 86400000));
+            return (
+              <div className="renewal" key={s.id}>
+                <div className="service-logo" style={{ background: s.color }}>{s.name[0]}</div>
+                <div>
+                  <strong>{s.name}</strong>
+                  <small>{s.plan}</small>
+                </div>
+                <div className="renewal-date">
+                  <strong>{formatDate(s.renewsAt)}</strong>
+                  <small>em {days} dias</small>
+                </div>
               </div>
-              <div className="renewal-date">
-                <strong>{formatDate(s.renewsAt)}</strong>
-                <small>em {s.id === 1 ? 12 : s.id === 2 ? 35 : 68} dias</small>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
       </div>
 
@@ -135,32 +143,32 @@ export default function Dashboard() {
               <h2>Alertas recentes</h2>
               <p>Ações que precisam da sua atenção</p>
             </div>
-            <span className="alert-count">3</span>
           </div>
-          <div className="alert-item">
-            <div className="alert-symbol yellow"><Bell size={16} /></div>
-            <div>
-              <strong>2 pagamentos pendentes</strong>
-              <p>Envie um lembrete aos participantes</p>
+          {pendingRequests > 0 && (
+            <div className="alert-item">
+              <div className="alert-symbol yellow"><Bell size={16} /></div>
+              <div>
+                <strong>{pendingRequests} solicitação{pendingRequests > 1 ? "ões" : ""} pendente{pendingRequests > 1 ? "s" : ""}</strong>
+                <p>Aprove ou recuse pedidos de acesso</p>
+              </div>
+              <button onClick={() => navigate("/requests")} aria-label="Ver solicitações"><ChevronDown size={16} /></button>
             </div>
-            <button onClick={() => navigate("/charges")} aria-label="Ver cobranças"><ChevronDown size={16} /></button>
-          </div>
-          <div className="alert-item">
-            <div className="alert-symbol red"><CalendarDays size={16} /></div>
-            <div>
-              <strong>Netflix renova em 12 dias</strong>
-              <p>Confira o valor da próxima anuidade</p>
+          )}
+          {nextRenewal && (
+            <div className="alert-item">
+              <div className="alert-symbol red"><CalendarDays size={16} /></div>
+              <div>
+                <strong>{nextRenewal.name} renova em {nextRenewalDays} dias</strong>
+                <p>Confira o valor da próxima anuidade</p>
+              </div>
+              <button onClick={() => navigate("/services")} aria-label="Ver serviços"><ChevronDown size={16} /></button>
             </div>
-            <button onClick={() => navigate("/services")} aria-label="Ver serviços"><ChevronDown size={16} /></button>
-          </div>
-          <div className="alert-item">
-            <div className="alert-symbol blue"><Users size={16} /></div>
-            <div>
-              <strong>Max acima da referência</strong>
-              <p>4 participantes para 3 vagas</p>
-            </div>
-            <button onClick={() => navigate("/services")} aria-label="Ver serviços"><ChevronDown size={16} /></button>
-          </div>
+          )}
+          {pendingRequests === 0 && !nextRenewal && (
+            <p className="muted" style={{ textAlign: "center", padding: 30 }}>
+              Nenhum alerta no momento.
+            </p>
+          )}
         </section>
       </div>
     </>

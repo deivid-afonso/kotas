@@ -1,12 +1,31 @@
 import { useState } from "react";
-import { ChevronDown, MoreHorizontal, Plus, Search } from "lucide-react";
-import { participants, services } from "../data";
-import { brl } from "../utils";
+import { ChevronDown, Search, Users } from "lucide-react";
+import { getRequests } from "../stores/serviceRequests";
+import { services } from "../data";
+
+interface RegisteredAccount {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+function loadRegisteredUsers(): RegisteredAccount[] {
+  try {
+    const raw = localStorage.getItem("assina-registered");
+    if (raw) return JSON.parse(raw) as RegisteredAccount[];
+  } catch { /* corrupted */ }
+  return [];
+}
 
 export default function Participants() {
   const [query, setQuery] = useState("");
-  const filtered = participants.filter((p) =>
-    p.name.toLowerCase().includes(query.toLowerCase()),
+  const users = loadRegisteredUsers().filter((u) => u.role === "user");
+  const requests = getRequests();
+
+  const filtered = users.filter((u) =>
+    u.name.toLowerCase().includes(query.toLowerCase()) ||
+    u.email.toLowerCase().includes(query.toLowerCase()),
   );
 
   return (
@@ -15,11 +34,11 @@ export default function Participants() {
         <div>
           <p className="eyebrow">GESTÃO</p>
           <h1>Participantes</h1>
-          <p className="muted">Gerencie pessoas e seus serviços anuais.</p>
+          <p className="muted">Pessoas cadastradas na plataforma.</p>
         </div>
-        <button className="primary-btn">
-          <Plus size={17} /> Novo participante
-        </button>
+        <span className="info-chip">
+          <Users size={15} /> {users.length} cadastrado{users.length !== 1 ? "s" : ""}
+        </span>
       </div>
       <div className="toolbar">
         <div className="search">
@@ -32,63 +51,74 @@ export default function Participants() {
           />
         </div>
         <button className="filter-btn">
-          Ativos <ChevronDown size={15} />
+          Todos <ChevronDown size={15} />
         </button>
       </div>
       <div className="panel table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Participante</th>
-              <th>Contato</th>
-              <th>Serviços ativos</th>
-              <th>Total anual</th>
-              <th>Status</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id}>
-                <td>
-                  <div className="person">
-                    <div className="person-avatar">
-                      {p.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                    </div>
-                    <strong>{p.name}</strong>
-                  </div>
-                </td>
-                <td>
-                  <span className="contact">
-                    {p.email}
-                    <br />
-                    {p.phone}
-                  </span>
-                </td>
-                <td>
-                  <div className="service-tags">
-                    {p.services.map((id) => (
-                      <span key={id} style={{ borderColor: services[id - 1].color }}>
-                        {services[id - 1].name}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td>
-                  <b>{brl(p.total)}</b>
-                </td>
-                <td>
-                  <span className={`tag-status ${p.status.toLowerCase()}`}>{p.status}</span>
-                </td>
-                <td>
-                  <button className="more-btn" aria-label={`Opções de ${p.name}`}>
-                    <MoreHorizontal />
-                  </button>
-                </td>
+        {filtered.length === 0 ? (
+          <p className="muted" style={{ textAlign: "center", padding: 40 }}>
+            {users.length === 0
+              ? "Nenhum participante cadastrado ainda."
+              : "Nenhum resultado encontrado."}
+          </p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Participante</th>
+                <th>E-mail</th>
+                <th>Serviços solicitados</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((u) => {
+                const userReqs = requests.filter((r) => r.userId === u.id);
+                const approved = userReqs.filter((r) => r.status === "aprovado");
+                return (
+                  <tr key={u.id}>
+                    <td>
+                      <div className="person">
+                        <div className="person-avatar">
+                          {u.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        </div>
+                        <strong>{u.name}</strong>
+                      </div>
+                    </td>
+                    <td><span className="contact">{u.email}</span></td>
+                    <td>
+                      {userReqs.length === 0 ? (
+                        <span className="muted">Nenhum</span>
+                      ) : (
+                        <div className="service-tags">
+                          {userReqs.map((r) => {
+                            const svc = services.find((s) => s.id === r.serviceId);
+                            return (
+                              <span
+                                key={r.id}
+                                style={{ borderColor: svc?.color ?? "#999" }}
+                              >
+                                {r.serviceName}
+                                {r.status === "solicitado" && " ⏳"}
+                                {r.status === "aprovado" && " ✓"}
+                                {r.status === "recusado" && " ✗"}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`tag-status ${approved.length > 0 ? "ativo" : "pendente"}`}>
+                        {approved.length > 0 ? "Ativo" : "Pendente"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </>
   );

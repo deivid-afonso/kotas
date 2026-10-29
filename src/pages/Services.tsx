@@ -90,7 +90,7 @@ export default function Services() {
             )}
             <div className="service-card-footer">
               <span>Custo por participante ativo</span>
-              <b>{brl(s.annualValue / s.participants)}</b>
+              <b>{s.participants > 0 ? brl(s.annualValue / s.participants) : "—"}</b>
             </div>
           </div>
         ))}

@@ -14,6 +14,18 @@ import { Metric } from "../components/Metric";
 import { StatusPill } from "../components/StatusPill";
 
 export default function Charges() {
+  const sumServices = (c: typeof charges[number]) => c.services.reduce((s, i) => s + i.value + i.adjustment, 0);
+  const total = charges.reduce((s, c) => s + sumServices(c), 0);
+  const paidCharges = charges.filter((c) => c.status === "pago");
+  const paidTotal = paidCharges.reduce((s, c) => s + sumServices(c), 0);
+  const paidCount = paidCharges.length;
+  const pendingCharges = charges.filter((c) => c.status === "pendente");
+  const pendingTotal = pendingCharges.reduce((s, c) => s + sumServices(c), 0);
+  const pendingCount = pendingCharges.length;
+  const overdueCharges = charges.filter((c) => c.status === "vencido");
+  const overdueTotal = overdueCharges.reduce((s, c) => s + sumServices(c), 0);
+  const overdueCount = overdueCharges.length;
+
   return (
     <>
       <div className="page-heading">
@@ -27,10 +39,10 @@ export default function Charges() {
         </button>
       </div>
       <div className="metric-grid compact" aria-label="Resumo de cobranças">
-        <Metric label="Total em cobranças" value={brl(1308.8)} detail="5 cobranças no ciclo 2025" tone="blue" icon={WalletCards} />
-        <Metric label="Recebido" value={brl(739.4)} detail="2 cobranças pagas" tone="green" icon={Check} />
-        <Metric label="Aguardando" value={brl(399.2)} detail="2 cobranças pendentes" tone="yellow" icon={CircleDollarSign} />
-        <Metric label="Vencido" value={brl(399.2)} detail="Ação necessária" tone="red" icon={AlertCircle} />
+        <Metric label="Total em cobranças" value={brl(total)} detail={`${charges.length} cobrança${charges.length !== 1 ? "s" : ""} no ciclo`} tone="blue" icon={WalletCards} />
+        <Metric label="Recebido" value={brl(paidTotal)} detail={`${paidCount} cobrança${paidCount !== 1 ? "s" : ""} paga${paidCount !== 1 ? "s" : ""}`} tone="green" icon={Check} />
+        <Metric label="Aguardando" value={brl(pendingTotal)} detail={pendingCount > 0 ? `${pendingCount} pendente${pendingCount !== 1 ? "s" : ""}` : "Nenhuma pendência"} tone="yellow" icon={CircleDollarSign} />
+        <Metric label="Vencido" value={brl(overdueTotal)} detail={overdueCount > 0 ? "Ação necessária" : "Nenhuma vencida"} tone="red" icon={AlertCircle} />
       </div>
       <div className="panel table-wrap">
         <div className="table-heading">
@@ -42,6 +54,11 @@ export default function Charges() {
             Todos os status <ChevronDown size={15} />
           </button>
         </div>
+        {charges.length === 0 ? (
+          <p className="muted" style={{ textAlign: "center", padding: 40 }}>
+            Nenhuma cobrança registrada ainda.
+          </p>
+        ) : (
         <table>
           <thead>
             <tr>
@@ -85,6 +102,7 @@ export default function Charges() {
             ))}
           </tbody>
         </table>
+        )}
       </div>
     </>
   );
