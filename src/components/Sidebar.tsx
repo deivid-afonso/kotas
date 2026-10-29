@@ -17,7 +17,7 @@ const adminNav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/services", label: "Serviços", icon: CreditCard },
   { to: "/participants", label: "Participantes", icon: Users },
-  { to: "/requests", label: "Solicitações", icon: Bell, badge: 3 },
+  { to: "/requests", label: "Solicitações", icon: Bell },
   { to: "/charges", label: "Cobranças anuais", icon: WalletCards },
   { to: "/pix", label: "Pagamentos PIX", icon: Zap },
   { to: "/reports", label: "Relatórios", icon: FileBarChart },
@@ -25,6 +25,7 @@ const adminNav = [
 
 const userNav = [
   { to: "/", label: "Meu painel", icon: LayoutDashboard },
+  { to: "/services", label: "Serviços", icon: CreditCard },
   { to: "/charges", label: "Minhas cobranças", icon: WalletCards },
 ];
 
@@ -66,7 +67,6 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               >
                 <Icon size={18} />
                 <span>{item.label}</span>
-                {"badge" in item && (item as typeof adminNav[number]).badge && <b>{(item as typeof adminNav[number]).badge}</b>}
               </NavLink>
             );
           })}

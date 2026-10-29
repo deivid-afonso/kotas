@@ -86,9 +86,12 @@ export default function UserDashboard() {
               </div>
             ))}
             {myServices.length === 0 && (
-              <p className="muted" style={{ textAlign: "center", padding: 40 }}>
-                Você ainda não participa de nenhum serviço.
-              </p>
+              <div style={{ textAlign: "center", padding: 40 }}>
+                <p className="muted">Você ainda não participa de nenhum serviço.</p>
+                <button className="primary-btn" style={{ marginTop: 16 }} onClick={() => navigate("/services")}>
+                  Explorar serviços disponíveis
+                </button>
+              </div>
             )}
           </div>
         </section>

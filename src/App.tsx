@@ -10,6 +10,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const UserDashboard = lazy(() => import("./pages/UserDashboard"));
+const UserServices = lazy(() => import("./pages/UserServices"));
 const Services = lazy(() => import("./pages/Services"));
 const Participants = lazy(() => import("./pages/Participants"));
 const Requests = lazy(() => import("./pages/Requests"));
@@ -77,6 +78,7 @@ export default function App() {
               ) : (
                 <Routes>
                   <Route index element={<UserDashboard />} />
+                  <Route path="services" element={<UserServices />} />
                   <Route path="charges" element={<UserCharges />} />
                   <Route path="settings" element={<Settings darkMode={darkMode} onToggleTheme={toggleTheme} />} />
                   <Route path="*" element={<NotFound />} />
