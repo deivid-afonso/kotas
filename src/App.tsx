@@ -7,6 +7,7 @@ import { Topbar } from "./components/Topbar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const UserDashboard = lazy(() => import("./pages/UserDashboard"));
 const Services = lazy(() => import("./pages/Services"));
@@ -29,6 +30,7 @@ function Loading() {
 
 export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [authView, setAuthView] = useState<"login" | "register">("login");
   const { darkMode, toggleTheme } = useTheme();
   const { user, isAdmin } = useAuth();
 
@@ -37,7 +39,11 @@ export default function App() {
       <div className={`app-shell ${darkMode ? "dark" : ""}`}>
         <ErrorBoundary>
           <Suspense fallback={<Loading />}>
-            <Login />
+            {authView === "login" ? (
+              <Login onGoRegister={() => setAuthView("register")} />
+            ) : (
+              <Register onGoLogin={() => setAuthView("login")} />
+            )}
           </Suspense>
         </ErrorBoundary>
       </div>

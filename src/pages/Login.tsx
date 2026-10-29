@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { AlertCircle, Eye, EyeOff, LogIn, Zap } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
-export default function Login() {
+export default function Login({ onGoRegister }: { onGoRegister: () => void }) {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,13 +14,9 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     setTimeout(() => {
       const err = login(email, password);
-      if (err) {
-        setError(err);
-        setLoading(false);
-      }
+      if (err) { setError(err); setLoading(false); }
     }, 400);
   };
 
@@ -31,9 +27,7 @@ export default function Login() {
           <div className="brand-mark">
             <Zap size={20} fill="currentColor" />
           </div>
-          <h1>
-            assina<span className="brand-dot">.</span>
-          </h1>
+          <h1>assina<span className="brand-dot">.</span></h1>
           <p>Faça login para gerenciar suas assinaturas</p>
         </div>
 
@@ -81,25 +75,27 @@ export default function Login() {
           </label>
 
           <button type="submit" className="login-submit" disabled={loading}>
-            {loading ? (
-              <div className="spinner small" />
-            ) : (
-              <>
-                <LogIn size={16} /> Entrar
-              </>
-            )}
+            {loading ? <div className="spinner small" /> : <><LogIn size={16} /> Entrar</>}
           </button>
         </form>
+
+        <div className="login-divider">
+          <span>ou</span>
+        </div>
+
+        <button type="button" className="login-register-btn" onClick={onGoRegister}>
+          Criar uma conta
+        </button>
 
         <div className="login-demo">
           <p>Contas demonstrativas</p>
           <div className="demo-accounts">
             <button
               type="button"
-              onClick={() => { setEmail("admin@assina.com"); setPassword("admin123"); setError(null); }}
+              onClick={() => { setEmail("deividsa@gmail.com"); setPassword("Pedro123@@11"); setError(null); }}
             >
               <strong>Admin</strong>
-              <small>admin@assina.com</small>
+              <small>deividsa@gmail.com</small>
             </button>
             <button
               type="button"
@@ -112,9 +108,7 @@ export default function Login() {
         </div>
       </div>
 
-      <p className="login-footer">
-        © 2025 Assina · Gestão de assinaturas compartilhadas
-      </p>
+      <p className="login-footer">© 2025 Assina · Gestão de assinaturas compartilhadas</p>
     </div>
   );
 }

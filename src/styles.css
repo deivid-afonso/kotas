@@ -37,6 +37,8 @@
 .demo-accounts button:hover{border-color:#4f46e5}
 .demo-accounts strong{display:block;font-size:11px;color:#e5e7eb;margin-bottom:2px}
 .demo-accounts small{color:#6e7a8e;font-size:10px}
+.login-divider{display:flex;align-items:center;gap:12px;margin:20px 0}.login-divider::before,.login-divider::after{content:"";flex:1;height:1px;background:#273247}.login-divider span{color:#6e7a8e;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.login-register-btn{width:100%;padding:11px;border:1px solid #334057;border-radius:8px;color:#c5cad6;font-weight:600;font-size:13px;transition:border-color .15s,color .15s}.login-register-btn:hover{border-color:#818cf8;color:#e5e7eb}
 .login-footer{color:#4b5563;font-size:11px;margin-top:24px}
 
 a{text-decoration:none;color:inherit}.sidebar nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:7px;color:#aab2c3;font-size:13px}.sidebar nav a:hover,.sidebar nav a.active{background:#242d3e;color:#fff}.sidebar nav a.active{box-shadow:inset 3px 0 #818cf8}.sidebar nav a b{margin-left:auto;border-radius:10px;background:#4f46e5;color:#fff;padding:1px 6px;font-size:10px}

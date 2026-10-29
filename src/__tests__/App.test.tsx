@@ -55,10 +55,10 @@ describe("App - Login", () => {
 
   it("logs in as admin", async () => {
     renderApp();
-    await userEvent.type(await screen.findByPlaceholderText("seu@email.com"), "admin@assina.com");
-    await userEvent.type(screen.getByPlaceholderText("••••••••"), "admin123");
+    await userEvent.type(await screen.findByPlaceholderText("seu@email.com"), "deividsa@gmail.com");
+    await userEvent.type(screen.getByPlaceholderText("••••••••"), "Pedro123@@11");
     await userEvent.click(screen.getByRole("button", { name: "Entrar" }));
-    await waitFor(() => expect(screen.queryByText(/Bom dia, Admin/)).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.queryByText(/Bom dia, Deivid/)).toBeInTheDocument(), { timeout: 3000 });
   });
 
   it("logs in as participant", async () => {

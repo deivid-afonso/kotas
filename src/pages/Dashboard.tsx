@@ -10,12 +10,15 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { charges, services } from "../data";
 import { brl, formatDate } from "../utils";
 import { Metric } from "../components/Metric";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const firstName = user?.name.split(" ")[0] ?? "Admin";
   const total = charges.reduce(
     (sum, c) => sum + c.services.reduce((s, item) => s + item.value + item.adjustment, 0),
     0,
@@ -30,7 +33,7 @@ export default function Dashboard() {
         <div>
           <p className="eyebrow">QUINTA-FEIRA, 29 DE MAIO DE 2025</p>
           <h1>
-            Bom dia, Admin <span>👋</span>
+            Bom dia, {firstName} <span>👋</span>
           </h1>
           <p className="muted">Aqui está o resumo das suas assinaturas.</p>
         </div>
