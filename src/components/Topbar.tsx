@@ -1,5 +1,6 @@
-import { Bell, Menu, Moon, Sun } from "lucide-react";
+import { Bell, LogOut, Menu, Moon, Sun } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const titles: Record<string, string> = {
   "/": "Dashboard",
@@ -20,7 +21,9 @@ interface TopbarProps {
 
 export function Topbar({ onMenuOpen, darkMode, onToggleTheme }: TopbarProps) {
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
   const pageTitle = titles[pathname] ?? "Dashboard";
+  const initials = user?.name.split(" ").map((n) => n[0]).slice(0, 2).join("") ?? "?";
 
   return (
     <header className="topbar" role="banner">
@@ -45,7 +48,12 @@ export function Topbar({ onMenuOpen, darkMode, onToggleTheme }: TopbarProps) {
           <Bell size={19} />
           <i />
         </button>
-        <div className="top-avatar" aria-label="Perfil do administrador">AC</div>
+        <button className="icon-btn" onClick={logout} title="Sair" aria-label="Sair da conta">
+          <LogOut size={18} />
+        </button>
+        <div className="top-avatar" title={user?.name} aria-label="Perfil">
+          {initials}
+        </div>
       </div>
     </header>
   );
