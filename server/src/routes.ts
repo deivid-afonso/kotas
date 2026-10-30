@@ -1,5 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "./db.js";
 import { requireAuth, requireAdmin, sign } from "./auth.js";
 
@@ -19,17 +20,17 @@ router.post("/auth/register", async (req, res) => {
   if (!password) return res.status(400).json({ error: "Crie uma senha." });
   if (String(password).length < 6) return res.status(400).json({ error: "Senha deve ter pelo menos 6 caracteres." });
 
-  const existing = await pool.query("SELECT id FROM users WHERE email = $1", [trimmedEmail]);
-  if (existing.rowCount && existing.rowCount > 0) {
+  const [existing] = await pool.query<RowDataPacket[]>("SELECT id FROM users WHERE email = ?", [trimmedEmail]);
+  if (existing.length > 0) {
     return res.status(409).json({ error: "Este e-mail já está cadastrado." });
   }
 
   const hash = await bcrypt.hash(String(password), 10);
-  const result = await pool.query(
-    "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, 'user') RETURNING id, name, email, role",
+  const [result] = await pool.query<ResultSetHeader>(
+    "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'user')",
     [trimmedName, trimmedEmail, hash],
   );
-  const user = result.rows[0];
+  const user = { id: result.insertId, name: trimmedName, email: trimmedEmail, role: "user" as const };
   const token = sign({ id: user.id, email: user.email, role: user.role });
   res.status(201).json({ token, user });
 });
@@ -41,11 +42,11 @@ router.post("/auth/login", async (req, res) => {
   if (!EMAIL_RE.test(trimmed)) return res.status(400).json({ error: "Formato de e-mail inválido." });
   if (!password) return res.status(400).json({ error: "Informe sua senha." });
 
-  const result = await pool.query(
-    "SELECT id, name, email, role, password_hash FROM users WHERE email = $1",
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT id, name, email, role, password_hash FROM users WHERE email = ?",
     [trimmed],
   );
-  const row = result.rows[0];
+  const row = rows[0];
   if (!row || !(await bcrypt.compare(String(password), row.password_hash))) {
     return res.status(401).json({ error: "E-mail ou senha incorretos." });
   }
@@ -56,20 +57,20 @@ router.post("/auth/login", async (req, res) => {
 });
 
 router.get("/auth/me", requireAuth, async (req, res) => {
-  const result = await pool.query(
-    "SELECT id, name, email, role FROM users WHERE id = $1",
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT id, name, email, role FROM users WHERE id = ?",
     [req.user!.id],
   );
-  const user = result.rows[0];
+  const user = rows[0];
   if (!user) return res.status(404).json({ error: "Usuário não encontrado." });
   res.json({ user });
 });
 
 router.get("/users", requireAuth, requireAdmin, async (_req, res) => {
-  const result = await pool.query(
+  const [rows] = await pool.query<RowDataPacket[]>(
     "SELECT id, name, email, role, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC",
   );
-  res.json(result.rows);
+  res.json(rows);
 });
 
 router.post("/requests", requireAuth, async (req, res) => {
@@ -77,32 +78,35 @@ router.post("/requests", requireAuth, async (req, res) => {
   if (!serviceId || !serviceName) {
     return res.status(400).json({ error: "serviceId e serviceName são obrigatórios." });
   }
-  const result = await pool.query(
-    `INSERT INTO service_requests (user_id, service_id, service_name)
-     VALUES ($1, $2, $3) RETURNING id, user_id, service_id, service_name, status, created_at`,
+  const [result] = await pool.query<ResultSetHeader>(
+    "INSERT INTO service_requests (user_id, service_id, service_name) VALUES (?, ?, ?)",
     [req.user!.id, Number(serviceId), String(serviceName)],
   );
-  res.status(201).json(result.rows[0]);
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT id, user_id, service_id, service_name, status, created_at FROM service_requests WHERE id = ?",
+    [result.insertId],
+  );
+  res.status(201).json(rows[0]);
 });
 
 router.get("/requests/mine", requireAuth, async (req, res) => {
-  const result = await pool.query(
+  const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT id, user_id, service_id, service_name, status, created_at
-     FROM service_requests WHERE user_id = $1 ORDER BY created_at DESC`,
+     FROM service_requests WHERE user_id = ? ORDER BY created_at DESC`,
     [req.user!.id],
   );
-  res.json(result.rows);
+  res.json(rows);
 });
 
 router.get("/requests", requireAuth, requireAdmin, async (_req, res) => {
-  const result = await pool.query(
+  const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT r.id, r.user_id, r.service_id, r.service_name, r.status, r.created_at,
             u.name AS user_name, u.email AS user_email
      FROM service_requests r
      JOIN users u ON u.id = r.user_id
      ORDER BY r.created_at DESC`,
   );
-  res.json(result.rows);
+  res.json(rows);
 });
 
 router.patch("/requests/:id", requireAuth, requireAdmin, async (req, res) => {
@@ -113,10 +117,10 @@ router.patch("/requests/:id", requireAuth, requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "ID inválido." });
 
-  const result = await pool.query(
-    "UPDATE service_requests SET status = $1 WHERE id = $2 RETURNING id, status",
+  const [result] = await pool.query<ResultSetHeader>(
+    "UPDATE service_requests SET status = ? WHERE id = ?",
     [status, id],
   );
-  if (result.rowCount === 0) return res.status(404).json({ error: "Solicitação não encontrada." });
-  res.json(result.rows[0]);
+  if (result.affectedRows === 0) return res.status(404).json({ error: "Solicitação não encontrada." });
+  res.json({ id, status });
 });
