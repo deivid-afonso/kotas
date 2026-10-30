@@ -1,30 +1,38 @@
 import { Check, Clock, Send, X } from "lucide-react";
-import { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useEffect, useState } from "react";
 import { services } from "../data";
 import { brl, formatDate } from "../utils";
-import { addRequest, getUserRequests, type ServiceRequest } from "../stores/serviceRequests";
+import { createRequest, listMyRequests, type ServiceRequest } from "../api/requests";
+import { ApiError } from "../api/client";
 
 export default function UserServices() {
-  const { user } = useAuth();
-  const [requests, setRequests] = useState<ServiceRequest[]>(() =>
-    user ? getUserRequests(user.id) : [],
-  );
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState<number | null>(null);
 
-  const handleRequest = (serviceId: number, serviceName: string) => {
-    if (!user) return;
-    const entry = addRequest({
-      userId: user.id,
-      userName: user.name,
-      userEmail: user.email,
-      serviceId,
-      serviceName,
-    });
-    setRequests((prev) => [...prev, entry]);
+  useEffect(() => {
+    listMyRequests()
+      .then(setRequests)
+      .catch((e) => setError(e instanceof ApiError ? e.message : "Erro ao carregar."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleRequest = async (serviceId: number, serviceName: string) => {
+    setSubmitting(serviceId);
+    setError(null);
+    try {
+      const entry = await createRequest(serviceId, serviceName);
+      setRequests((prev) => [entry, ...prev]);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Erro ao solicitar.");
+    } finally {
+      setSubmitting(null);
+    }
   };
 
   const getStatus = (serviceId: number) =>
-    requests.find((r) => r.serviceId === serviceId);
+    requests.find((r) => r.service_id === serviceId);
 
   return (
     <>
@@ -35,6 +43,9 @@ export default function UserServices() {
           <p className="muted">Explore os serviços e solicite participação.</p>
         </div>
       </div>
+
+      {error && <div className="login-error" role="alert" style={{ marginBottom: 16 }}>{error}</div>}
+      {loading && <p className="muted">Carregando...</p>}
 
       <div className="services-grid">
         {services.map((s) => {
@@ -76,8 +87,9 @@ export default function UserServices() {
                   <button
                     className="primary-btn"
                     onClick={() => handleRequest(s.id, s.name)}
+                    disabled={submitting === s.id}
                   >
-                    <Send size={14} /> Solicitar participação
+                    <Send size={14} /> {submitting === s.id ? "Enviando..." : "Solicitar participação"}
                   </button>
                 )}
               </div>

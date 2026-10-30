@@ -1,27 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, Search, Users } from "lucide-react";
-import { getRequests } from "../stores/serviceRequests";
+import { listUsers, type RegisteredUser } from "../api/users";
+import { listAllRequests, type ServiceRequest } from "../api/requests";
+import { ApiError } from "../api/client";
 import { services } from "../data";
-
-interface RegisteredAccount {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
-
-function loadRegisteredUsers(): RegisteredAccount[] {
-  try {
-    const raw = localStorage.getItem("assina-registered");
-    if (raw) return JSON.parse(raw) as RegisteredAccount[];
-  } catch { /* corrupted */ }
-  return [];
-}
 
 export default function Participants() {
   const [query, setQuery] = useState("");
-  const users = loadRegisteredUsers().filter((u) => u.role === "user");
-  const requests = getRequests();
+  const [users, setUsers] = useState<RegisteredUser[]>([]);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([listUsers(), listAllRequests()])
+      .then(([u, r]) => { setUsers(u); setRequests(r); })
+      .catch((e) => setError(e instanceof ApiError ? e.message : "Erro ao carregar."))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = users.filter((u) =>
     u.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -54,12 +50,13 @@ export default function Participants() {
           Todos <ChevronDown size={15} />
         </button>
       </div>
+      {error && <div className="login-error" role="alert" style={{ marginBottom: 16 }}>{error}</div>}
       <div className="panel table-wrap">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <p className="muted" style={{ textAlign: "center", padding: 40 }}>Carregando...</p>
+        ) : filtered.length === 0 ? (
           <p className="muted" style={{ textAlign: "center", padding: 40 }}>
-            {users.length === 0
-              ? "Nenhum participante cadastrado ainda."
-              : "Nenhum resultado encontrado."}
+            {users.length === 0 ? "Nenhum participante cadastrado ainda." : "Nenhum resultado encontrado."}
           </p>
         ) : (
           <table>
@@ -73,7 +70,7 @@ export default function Participants() {
             </thead>
             <tbody>
               {filtered.map((u) => {
-                const userReqs = requests.filter((r) => r.userId === u.id);
+                const userReqs = requests.filter((r) => r.user_id === u.id);
                 const approved = userReqs.filter((r) => r.status === "aprovado");
                 return (
                   <tr key={u.id}>
@@ -92,13 +89,10 @@ export default function Participants() {
                       ) : (
                         <div className="service-tags">
                           {userReqs.map((r) => {
-                            const svc = services.find((s) => s.id === r.serviceId);
+                            const svc = services.find((s) => s.id === r.service_id);
                             return (
-                              <span
-                                key={r.id}
-                                style={{ borderColor: svc?.color ?? "#999" }}
-                              >
-                                {r.serviceName}
+                              <span key={r.id} style={{ borderColor: svc?.color ?? "#999" }}>
+                                {r.service_name}
                                 {r.status === "solicitado" && " ⏳"}
                                 {r.status === "aprovado" && " ✓"}
                                 {r.status === "recusado" && " ✗"}

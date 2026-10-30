@@ -1,21 +1,26 @@
 import { Check, CircleDollarSign, WalletCards } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
-import { charges } from "../data";
+import { useEffect, useState } from "react";
+import { services } from "../data";
 import { brl, formatDate } from "../utils";
 import { Metric } from "../components/Metric";
-import { StatusPill } from "../components/StatusPill";
+import { listMyRequests, type ServiceRequest } from "../api/requests";
 
 export default function UserCharges() {
-  const { user } = useAuth();
-  const myCharges = charges.filter((c) => c.participantId === user?.participantId);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const total = myCharges.reduce(
-    (sum, c) => sum + c.services.reduce((s, item) => s + item.value + item.adjustment, 0),
-    0,
-  );
-  const paid = myCharges
-    .filter((c) => c.status === "pago")
-    .reduce((sum, c) => sum + c.services.reduce((s, item) => s + item.value + item.adjustment, 0), 0);
+  useEffect(() => {
+    listMyRequests()
+      .then(setRequests)
+      .catch(() => { /* ok */ })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const approved = requests.filter((r) => r.status === "aprovado");
+  const myServices = approved
+    .map((r) => services.find((s) => s.id === r.service_id))
+    .filter((s): s is NonNullable<typeof s> => Boolean(s));
+  const total = myServices.reduce((sum, s) => sum + s.chargeValue, 0);
 
   return (
     <>
@@ -23,52 +28,53 @@ export default function UserCharges() {
         <div>
           <p className="eyebrow">FINANCEIRO</p>
           <h1>Minhas cobranças</h1>
-          <p className="muted">Acompanhe suas cobranças anuais consolidadas.</p>
+          <p className="muted">Valores anuais das assinaturas aprovadas.</p>
         </div>
       </div>
 
       <div className="metric-grid compact" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
-        <Metric label="Total" value={brl(total)} detail={`${myCharges.length} cobrança${myCharges.length > 1 ? "s" : ""}`} tone="blue" icon={WalletCards} />
-        <Metric label="Pago" value={brl(paid)} detail={paid > 0 ? "Confirmado" : "—"} tone="green" icon={Check} />
-        <Metric label="Pendente" value={brl(total - paid)} detail={total - paid > 0 ? "Aguardando" : "Nada pendente"} tone={total - paid > 0 ? "yellow" : "green"} icon={CircleDollarSign} />
+        <Metric label="Serviços ativos" value={String(myServices.length)} detail={myServices.length > 0 ? "Aprovados pelo admin" : "Nenhum ainda"} tone="blue" icon={WalletCards} />
+        <Metric label="Total anual" value={brl(total)} detail={total > 0 ? "Soma das cotas" : "—"} tone="green" icon={Check} />
+        <Metric label="Média mensal" value={brl(total / 12)} detail="Valor estimado" tone="yellow" icon={CircleDollarSign} />
       </div>
 
       <div className="panel table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Referência</th>
-              <th>Serviços</th>
-              <th>Vencimento</th>
-              <th>Valor</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {myCharges.map((c) => (
-              <tr key={c.id}>
-                <td><b>{c.reference}</b></td>
-                <td>
-                  <div className="service-tags">
-                    {c.services.map((s) => (
-                      <span key={s.name}>{s.name}</span>
-                    ))}
-                  </div>
-                </td>
-                <td>{formatDate(c.dueDate)}</td>
-                <td><b>{brl(c.services.reduce((sum, s) => sum + s.value + s.adjustment, 0))}</b></td>
-                <td><StatusPill status={c.status} /></td>
-              </tr>
-            ))}
-            {myCharges.length === 0 && (
+        {loading ? (
+          <p className="muted" style={{ textAlign: "center", padding: 40 }}>Carregando...</p>
+        ) : (
+          <table>
+            <thead>
               <tr>
-                <td colSpan={5} style={{ textAlign: "center", padding: 40 }}>
-                  <span className="muted">Nenhuma cobrança encontrada.</span>
-                </td>
+                <th>Serviço</th>
+                <th>Plano</th>
+                <th>Renovação</th>
+                <th>Valor anual</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {myServices.map((s) => (
+                <tr key={s.id}>
+                  <td>
+                    <div className="person">
+                      <div className="service-logo" style={{ background: s.color }}>{s.name[0]}</div>
+                      <strong>{s.name}</strong>
+                    </div>
+                  </td>
+                  <td>{s.plan}</td>
+                  <td>{formatDate(s.renewsAt)}</td>
+                  <td><b>{brl(s.chargeValue)}</b></td>
+                </tr>
+              ))}
+              {myServices.length === 0 && (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center", padding: 40 }}>
+                    <span className="muted">Você ainda não tem assinaturas aprovadas.</span>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </>
   );

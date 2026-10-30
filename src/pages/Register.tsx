@@ -12,7 +12,7 @@ export default function Register({ onGoLogin }: { onGoLogin: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -22,10 +22,8 @@ export default function Register({ onGoLogin }: { onGoLogin: () => void }) {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      const err = register(name, email, password);
-      if (err) { setError(err); setLoading(false); }
-    }, 400);
+    const err = await register(name, email, password);
+    if (err) { setError(err); setLoading(false); }
   };
 
   return (

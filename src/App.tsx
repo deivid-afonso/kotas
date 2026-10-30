@@ -33,7 +33,15 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "register">("login");
   const { darkMode, toggleTheme } = useTheme();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className={`app-shell ${darkMode ? "dark" : ""}`}>
+        <Loading />
+      </div>
+    );
+  }
 
   if (!user) {
     return (

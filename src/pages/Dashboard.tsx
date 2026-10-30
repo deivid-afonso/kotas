@@ -13,12 +13,21 @@ import { useAuth } from "../contexts/AuthContext";
 import { charges, services } from "../data";
 import { brl, formatDate } from "../utils";
 import { Metric } from "../components/Metric";
-import { getRequests } from "../stores/serviceRequests";
+import { useEffect, useState } from "react";
+import { listAllRequests } from "../api/requests";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const firstName = user?.name.split(" ")[0] ?? "Admin";
+  const [pendingRequests, setPendingRequests] = useState(0);
+
+  useEffect(() => {
+    listAllRequests()
+      .then((reqs) => setPendingRequests(reqs.filter((r) => r.status === "solicitado").length))
+      .catch(() => { /* ok */ });
+  }, []);
+
   const total = charges.reduce(
     (sum, c) => sum + c.services.reduce((s, item) => s + item.value + item.adjustment, 0),
     0,
@@ -27,10 +36,10 @@ export default function Dashboard() {
     .filter((c) => c.status === "pago")
     .reduce((sum, c) => sum + c.services.reduce((s, item) => s + item.value + item.adjustment, 0), 0);
 
-  const pendingRequests = getRequests().filter((r) => r.status === "solicitado").length;
+  const [now] = useState(() => Date.now());
   const sorted = [...services].sort((a, b) => new Date(a.renewsAt).getTime() - new Date(b.renewsAt).getTime());
-  const nextRenewal = sorted.find((s) => new Date(s.renewsAt).getTime() > Date.now());
-  const nextRenewalDays = nextRenewal ? Math.ceil((new Date(nextRenewal.renewsAt).getTime() - Date.now()) / 86400000) : 0;
+  const nextRenewal = sorted.find((s) => new Date(s.renewsAt).getTime() > now);
+  const nextRenewalDays = nextRenewal ? Math.ceil((new Date(nextRenewal.renewsAt).getTime() - now) / 86400000) : 0;
 
   return (
     <>
@@ -91,7 +100,7 @@ export default function Dashboard() {
             <button className="link-btn" onClick={() => navigate("/services")}>Ver todas</button>
           </div>
           {services.slice(0, 3).map((s) => {
-            const days = Math.max(0, Math.ceil((new Date(s.renewsAt).getTime() - Date.now()) / 86400000));
+            const days = Math.max(0, Math.ceil((new Date(s.renewsAt).getTime() - now) / 86400000));
             return (
               <div className="renewal" key={s.id}>
                 <div className="service-logo" style={{ background: s.color }}>{s.name[0]}</div>

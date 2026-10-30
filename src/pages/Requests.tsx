@@ -1,17 +1,32 @@
 import { Check, Users, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StatusPill } from "../components/StatusPill";
-import { getRequests, updateRequestStatus, type ServiceRequest } from "../stores/serviceRequests";
-import { formatDate } from "../utils";
+import { listAllRequests, updateRequestStatus, type ServiceRequest } from "../api/requests";
+import { ApiError } from "../api/client";
 
 export default function Requests() {
-  const [requests, setRequests] = useState<ServiceRequest[]>(getRequests);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    listAllRequests()
+      .then((r) => { if (!cancelled) setRequests(r); })
+      .catch((e) => { if (!cancelled) setError(e instanceof ApiError ? e.message : "Erro ao carregar."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const pending = requests.filter((r) => r.status === "solicitado").length;
 
-  const handleAction = (id: number, status: "aprovado" | "recusado") => {
-    updateRequestStatus(id, status);
-    setRequests(getRequests());
+  const handleAction = async (id: number, status: "aprovado" | "recusado") => {
+    try {
+      await updateRequestStatus(id, status);
+      setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Erro ao atualizar.");
+    }
   };
 
   return (
@@ -26,8 +41,11 @@ export default function Requests() {
           <Users size={15} /> {pending} aguardando análise
         </span>
       </div>
+      {error && <div className="login-error" role="alert" style={{ marginBottom: 16 }}>{error}</div>}
       <div className="panel table-wrap">
-        {requests.length === 0 ? (
+        {loading ? (
+          <p className="muted" style={{ textAlign: "center", padding: 40 }}>Carregando...</p>
+        ) : requests.length === 0 ? (
           <p className="muted" style={{ textAlign: "center", padding: 40 }}>
             Nenhuma solicitação recebida ainda.
           </p>
@@ -48,16 +66,16 @@ export default function Requests() {
                   <td>
                     <div className="person">
                       <div className="person-avatar">
-                        {r.userName.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        {(r.user_name ?? "?").split(" ").map((n) => n[0]).slice(0, 2).join("")}
                       </div>
                       <div>
-                        <strong>{r.userName}</strong>
-                        <small>{r.userEmail}</small>
+                        <strong>{r.user_name}</strong>
+                        <small>{r.user_email}</small>
                       </div>
                     </div>
                   </td>
-                  <td><b>{r.serviceName}</b></td>
-                  <td>{formatDate(r.date)}</td>
+                  <td><b>{r.service_name}</b></td>
+                  <td>{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
                   <td><StatusPill status={r.status} /></td>
                   <td>
                     {r.status === "solicitado" ? (

@@ -10,14 +10,12 @@ export default function Login({ onGoRegister }: { onGoRegister: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setTimeout(() => {
-      const err = login(email, password);
-      if (err) { setError(err); setLoading(false); }
-    }, 400);
+    const err = await login(email, password);
+    if (err) { setError(err); setLoading(false); }
   };
 
   return (

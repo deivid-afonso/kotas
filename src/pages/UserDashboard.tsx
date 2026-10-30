@@ -1,26 +1,31 @@
-import { AlertCircle, CalendarDays, Check, CircleDollarSign, WalletCards } from "lucide-react";
+import { CalendarDays, Check, CircleDollarSign, Clock, WalletCards, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { charges, participants, services } from "../data";
+import { services } from "../data";
 import { brl, formatDate } from "../utils";
 import { Metric } from "../components/Metric";
+import { listMyRequests, type ServiceRequest } from "../api/requests";
 
 export default function UserDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const participant = participants.find((p) => p.id === user?.participantId);
-  const myCharges = charges.filter((c) => c.participantId === user?.participantId);
-  const myServices = participant ? participant.services.map((id) => services[id - 1]) : [];
+  useEffect(() => {
+    listMyRequests()
+      .then(setRequests)
+      .catch(() => { /* ok */ })
+      .finally(() => setLoading(false));
+  }, []);
 
-  const total = myCharges.reduce(
-    (sum, c) => sum + c.services.reduce((s, item) => s + item.value + item.adjustment, 0),
-    0,
-  );
-  const paid = myCharges
-    .filter((c) => c.status === "pago")
-    .reduce((sum, c) => sum + c.services.reduce((s, item) => s + item.value + item.adjustment, 0), 0);
-  const pending = total - paid;
+  const approved = requests.filter((r) => r.status === "aprovado");
+  const pending = requests.filter((r) => r.status === "solicitado");
+  const myServices = approved
+    .map((r) => services.find((s) => s.id === r.service_id))
+    .filter((s): s is NonNullable<typeof s> => Boolean(s));
+  const totalAnnual = myServices.reduce((sum, s) => sum + s.chargeValue, 0);
 
   return (
     <>
@@ -28,36 +33,36 @@ export default function UserDashboard() {
         <div>
           <p className="eyebrow">MEU PAINEL</p>
           <h1>Olá, {user?.name.split(" ")[0]} <span>👋</span></h1>
-          <p className="muted">Aqui está o resumo das suas assinaturas anuais.</p>
+          <p className="muted">Aqui está o resumo das suas assinaturas.</p>
         </div>
       </div>
 
       <section className="metric-grid" aria-label="Resumo pessoal">
         <Metric
-          label="Total anual"
-          value={brl(total)}
-          detail={`${myCharges.length} cobrança${myCharges.length > 1 ? "s" : ""}`}
+          label="Serviços ativos"
+          value={String(myServices.length)}
+          detail={myServices.length > 0 ? myServices.map((s) => s.name).join(", ") : "Nenhum ainda"}
           tone="blue"
           icon={CircleDollarSign}
         />
         <Metric
-          label="Pago"
-          value={brl(paid)}
-          detail={paid > 0 ? "Em dia" : "Nenhum pagamento"}
+          label="Total anual"
+          value={brl(totalAnnual)}
+          detail={myServices.length > 0 ? "Soma das assinaturas aprovadas" : "Sem valores"}
           tone="green"
           icon={Check}
         />
         <Metric
-          label="Pendente"
-          value={brl(pending)}
-          detail={pending > 0 ? "Aguardando pagamento" : "Tudo pago"}
-          tone={pending > 0 ? "yellow" : "green"}
+          label="Aguardando aprovação"
+          value={String(pending.length)}
+          detail={pending.length > 0 ? "Em análise pelo admin" : "Nenhum pedido pendente"}
+          tone={pending.length > 0 ? "yellow" : "green"}
           icon={WalletCards}
         />
         <Metric
-          label="Serviços ativos"
-          value={String(myServices.length)}
-          detail={myServices.map((s) => s.name).join(", ")}
+          label="Pedidos totais"
+          value={String(requests.length)}
+          detail="Histórico de solicitações"
           tone="blue"
           icon={CalendarDays}
         />
@@ -68,7 +73,7 @@ export default function UserDashboard() {
           <div className="panel-header">
             <div>
               <h2>Meus serviços</h2>
-              <p>Assinaturas anuais em que você participa</p>
+              <p>Assinaturas aprovadas em que você participa</p>
             </div>
           </div>
           <div style={{ marginTop: 16 }}>
@@ -85,7 +90,7 @@ export default function UserDashboard() {
                 </div>
               </div>
             ))}
-            {myServices.length === 0 && (
+            {myServices.length === 0 && !loading && (
               <div style={{ textAlign: "center", padding: 40 }}>
                 <p className="muted">Você ainda não participa de nenhum serviço.</p>
                 <button className="primary-btn" style={{ marginTop: 16 }} onClick={() => navigate("/services")}>
@@ -99,27 +104,26 @@ export default function UserDashboard() {
         <section className="panel alerts-panel">
           <div className="panel-header">
             <div>
-              <h2>Cobranças recentes</h2>
-              <p>Seu histórico de pagamentos</p>
+              <h2>Minhas solicitações</h2>
+              <p>Histórico de pedidos</p>
             </div>
-            <button className="link-btn" onClick={() => navigate("/charges")}>Ver todas</button>
           </div>
-          {myCharges.length === 0 ? (
+          {requests.length === 0 ? (
             <p className="muted" style={{ textAlign: "center", padding: 40 }}>
-              Nenhuma cobrança registrada.
+              {loading ? "Carregando..." : "Nenhuma solicitação enviada."}
             </p>
           ) : (
-            myCharges.map((c) => (
-              <div className="alert-item" key={c.id}>
-                <div className={`alert-symbol ${c.status === "pago" ? "blue" : c.status === "vencido" ? "red" : "yellow"}`}>
-                  {c.status === "pago" ? <Check size={16} /> : c.status === "vencido" ? <AlertCircle size={16} /> : <WalletCards size={16} />}
+            requests.map((r) => (
+              <div className="alert-item" key={r.id}>
+                <div className={`alert-symbol ${r.status === "aprovado" ? "blue" : r.status === "recusado" ? "red" : "yellow"}`}>
+                  {r.status === "aprovado" ? <Check size={16} /> : r.status === "recusado" ? <X size={16} /> : <Clock size={16} />}
                 </div>
                 <div>
-                  <strong>
-                    {brl(c.services.reduce((sum, s) => sum + s.value + s.adjustment, 0))} — {c.reference}
-                  </strong>
+                  <strong>{r.service_name}</strong>
                   <p>
-                    {c.status === "pago" ? "Pago" : c.status === "vencido" ? "Vencido" : "Pendente"} · Vence {formatDate(c.dueDate)}
+                    {r.status === "aprovado" ? "Aprovado" : r.status === "recusado" ? "Recusado" : "Aguardando aprovação"}
+                    {" · "}
+                    {new Date(r.created_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
               </div>
